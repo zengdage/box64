@@ -43,7 +43,7 @@ int GetSymTabStartEnd(lib_t* maplib, const char* name, uintptr_t* start, uintptr
 void MapLibRemoveLib(lib_t* maplib, library_t* lib);
 void MapLibPrependLib(lib_t* maplib, library_t* lib, library_t* ref);
 
-const char* FindSymbolName(lib_t *maplib, void* p, void** start, uint64_t* sz, const char** libname, void** base, library_t** lib);
+const char* FindSymbolName(char* native_name, lib_t *maplib, void* p, void** start, uint64_t* sz, const char** libname, void** base, library_t** lib);
 
 void AddOffsetSymbol(lib_t *maplib, void* offs, const char* name);
 const char* GetNameOffset(lib_t *maplib, void* offs);

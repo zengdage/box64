@@ -4224,13 +4224,14 @@ EXPORT int my_backtrace_ip(x64emu_t* emu, void** buffer, int size)
 EXPORT char** my_backtrace_symbols(x64emu_t* emu, uintptr_t* buffer, int size)
 {
     (void)emu;
+    char native_name[NATIVE_NAME_MAX] = { 0 };
     char** ret = (char**)calloc(1, size*sizeof(char*) + size*200);  // capping each strings to 200 chars, not using box_calloc (program space)
     char* s = (char*)(ret+size);
     for (int i=0; i<size; ++i) {
         uintptr_t start = 0;
         uint64_t sz = 0;
         elfheader_t *hdr = FindElfAddress(my_context, buffer[i]);
-        const char* symbname = FindNearestSymbolName(hdr, (void*)buffer[i], &start, &sz);
+        const char* symbname = FindNearestSymbolName(native_name, hdr, (void*)buffer[i], &start, &sz);
         if(!sz) sz=0x100;   // arbitrary value...
         if (symbname && buffer[i]>=start && (buffer[i]<(start+sz) || !sz)) {
             snprintf(s, 200, "%s(%s+%lx) [%p]", ElfName(hdr), symbname, buffer[i] - start, (void*)buffer[i]);
@@ -4249,10 +4250,11 @@ EXPORT void my_backtrace_symbols_fd(x64emu_t* emu, uintptr_t* buffer, int size, 
 {
     (void)emu;
     char s[200];
+    char native_name[NATIVE_NAME_MAX] = { 0 };
     for (int i=0; i<size; ++i) {
         uintptr_t start = 0;
         uint64_t sz = 0;
-        const char* symbname = FindNearestSymbolName(FindElfAddress(my_context, buffer[i]), (void*)buffer[i], &start, &sz);
+        const char* symbname = FindNearestSymbolName(native_name, FindElfAddress(my_context, buffer[i]), (void*)buffer[i], &start, &sz);
         if(!sz) sz=0x100;   // arbitrary value...
         if(symbname && buffer[i]>=start && (buffer[i]<(start+sz) || !sz))
             snprintf(s, 200, "%s+%ld [%p]\n", symbname, buffer[i] - start, (void*)buffer[i]);

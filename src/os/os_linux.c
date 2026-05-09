@@ -101,24 +101,30 @@ void* GetSegmentBase(void* emu, uint32_t desc)
     return ptr;
 }
 
-const char* GetBridgeName(void* p)
+const char* GetBridgeName(char* buff, void* p)
 {
-    return getBridgeName(p);
+    return getBridgeName(buff, p);
 }
 
-const char* GetNativeName(void* p, int lib)
+const char* GetNativeName(char* buff, void* p, int lib)
 {
-    static char buff[500] = { 0 };
     {
-        const char* n = GetBridgeName(p);
-        if (n)
-            return n;
+        const char* n = GetBridgeName(buff, p);
+        if (buff == n)
+            return buff;
+
+        if (n) {
+            strcpy(buff, n);
+            return buff;
+        }
     }
     Dl_info info;
     if (dladdr(p, &info) == 0) {
         const char* ret = GetNameOffset(my_context->maplib, p);
-        if (ret)
-            return ret;
+        if (ret) {
+            strcpy(buff, ret);
+            return buff;
+        }
         sprintf(buff, "%s(%p)", "???", p);
         return buff;
     } else {
@@ -137,6 +143,10 @@ const char* GetNativeName(void* p, int lib)
     return buff;
 }
 
+void FreeNativeNameDup(void* p)
+{
+    box_free(p);
+}
 
 void PersonalityAddrLimit32Bit(void)
 {

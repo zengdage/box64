@@ -263,10 +263,11 @@ int my_sigactionhandler_oldcode_32(x64emu_t* emu, int32_t sig, int simple, sigin
 #endif
 int my_sigactionhandler_oldcode_64(x64emu_t* emu, int32_t sig, int simple, siginfo_t* info, void * ucntx, int* old_code, void* cur_db)
 {
+    char native_name[NATIVE_NAME_MAX] = { 0 };
     int Locks = unlockMutex();
     int log_minimum = (BOX64ENV(showsegv))?LOG_NONE:LOG_DEBUG;
 
-    printf_log(LOG_DEBUG, "Sigactionhanlder for signal #%d called (jump to %p/%s)\n", sig, (void*)my_context->signals[sig], GetNativeName((void*)my_context->signals[sig], 1));
+    printf_log(LOG_DEBUG, "Sigactionhanlder for signal #%d called (jump to %p/%s)\n", sig, (void*)my_context->signals[sig], GetNativeName(native_name, (void*)my_context->signals[sig], 1));
 
     uintptr_t restorer = my_context->restorer[sig];
     // get that actual ESP first!
@@ -927,12 +928,13 @@ void my_box64signalhandler(int32_t sig, siginfo_t* info, void * ucntx)
         if((prot&PROT_WRITE)/*|| (prot&PROT_DYNAREC)*/) {
             if(BOX64ENV(dynarec_log)) {
                 char tmp[128] = {0};
+                char native_name[NATIVE_NAME_MAX] = { 0 };
                 zydis_dec_t* dec = emu->segs[_CS] == 0x23 ? my_context->dec32 : my_context->dec;
                 if (dec)
                 snprintf(tmp, 127, " %sopcode=%s; native opcode=%08x", (emu->segs[_CS] == 0x23) ? "x86" : "x64", DecodeX64Trace(dec, x64pc, 1), *(uint32_t*)pc);
                 else
                 snprintf(tmp, 127, " %sopcode=%02X %02X %02X %02X %02X %02X %02X %02X (opcode=%08x)", (emu->segs[_CS] == 0x23) ? "x86" : "x64", ((uint8_t*)x64pc)[0], ((uint8_t*)x64pc)[1], ((uint8_t*)x64pc)[2], ((uint8_t*)x64pc)[3], ((uint8_t*)x64pc)[4], ((uint8_t*)x64pc)[5], ((uint8_t*)x64pc)[6], ((uint8_t*)x64pc)[7], *(uint32_t*)pc);
-                dynarec_log(LOG_INFO, "Writting from %04d|%p(%s, native=%s) to %p using %s\n", GetTID(), (void*)x64pc, getAddrFunctionName(x64pc), db?"Dynablock":GetNativeName(pc, 1),(void*)addr, tmp);
+                dynarec_log(LOG_INFO, "Writting from %04d|%p(%s, native=%s) to %p using %s\n", GetTID(), (void*)x64pc, getAddrFunctionName(x64pc), db?"Dynablock":GetNativeName(native_name, pc, 1),(void*)addr, tmp);
             }
             // if there is no write permission, don't return and continue to program signal handling
             unlock_signal();
@@ -1060,13 +1062,14 @@ dynarec_log(/*LOG_DEBUG*/LOG_INFO, "%04d|Repeated SIGSEGV with Access error on %
     old_prot = prot;
     const char* name = NULL;
     const char* x64name = NULL;
+    char native_name[NATIVE_NAME_MAX] = { 0 };
     if (log_minimum<=BOX64ENV(log)) {
         signal_jmpbuf_active = 1;
         if(sigsetjmp(SIG_JMPBUF, 1)) {
             // segfault while gathering function name...
             name = "???";
         } else
-            name = GetNativeName(pc, 1);
+            name = GetNativeName(native_name, pc, 1);
         signal_jmpbuf_active = 0;
     }
     // Adjust RIP for special case of NULL function run

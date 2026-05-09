@@ -47,6 +47,7 @@ uintptr_t dynarec64_00(dynarec_ppc64le_t* dyn, uintptr_t addr, uintptr_t ip, int
     int32_t tmp;
     int lock;
     int cacheupd = 0;
+    char native_name[NATIVE_NAME_MAX] = { 0 };
     MAYUSE(tmp1);
     MAYUSE(tmp2);
     MAYUSE(tmp3);

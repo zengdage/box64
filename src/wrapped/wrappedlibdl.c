@@ -513,6 +513,7 @@ int my_dlclose(x64emu_t* emu, void *handle)
 
 int my_dladdr1(x64emu_t* emu, void *addr, void *i, void** extra_info, int flags)
 {
+    char native_name[NATIVE_NAME_MAX] = { 0 };
     //int dladdr(void *addr, Dl_info *info);
     dlprivate_t *dl = my_context->dlprivate;
     CLEARERR;
@@ -523,7 +524,8 @@ int my_dladdr1(x64emu_t* emu, void *addr, void *i, void** extra_info, int flags)
     library_t* lib = NULL;
     info->dli_saddr = NULL;
     info->dli_fname = NULL;
-    info->dli_sname = FindSymbolName(my_context->maplib, addr, &info->dli_saddr, NULL, &info->dli_fname, &info->dli_fbase, &lib);
+    const char* sname = FindSymbolName(native_name, my_context->maplib, addr, &info->dli_saddr, NULL, &info->dli_fname, &info->dli_fbase, &lib);
+    info->dli_sname = sname == native_name ? strdup(native_name) : sname;
     printf_log(LOG_DEBUG, "     dladdr return saddr=%p, fname=\"%s\", sname=\"%s\"\n", info->dli_saddr, info->dli_sname?info->dli_sname:"", info->dli_fname?info->dli_fname:"");
     if(flags==RTLD_DL_SYMENT) {
         printf_log(LOG_INFO, "Warning, unimplement call to dladdr1 with RTLD_DL_SYMENT flags\n");
@@ -585,10 +587,11 @@ EXPORT int my__dl_find_object(x64emu_t* emu, void* addr, my_dl_find_object_t* re
 {
     //printf_log(LOG_INFO, "Unimplemented _dl_find_object called\n");
     uintptr_t start=0, sz=0;
+    char native_name[NATIVE_NAME_MAX] = { 0 };
     elfheader_t* h = FindElfAddress(my_context, (uintptr_t)addr);
     if(h) {
         // find an actual elf
-        /*const char* name =*/ FindNearestSymbolName(h, addr, &start, &sz);
+        /*const char* name =*/ FindNearestSymbolName(native_name, h, addr, &start, &sz);
         result->dlfo_map_start = (void*)start;
         result->dlfo_map_end = (void*)(start+sz-1);
         result->dlfo_eh_frame = (void*)(h->ehframehdr+h->delta);

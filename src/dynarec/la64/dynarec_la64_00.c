@@ -48,6 +48,7 @@ uintptr_t dynarec64_00(dynarec_la64_t* dyn, uintptr_t addr, uintptr_t ip, int ni
     int unscaled;
     int lock;
     int cacheupd = 0;
+    char native_name[NATIVE_NAME_MAX] = { 0 };
 
     opcode = F8;
     MAYUSE(eb1);
@@ -2636,7 +2637,7 @@ uintptr_t dynarec64_00(dynarec_la64_t* dyn, uintptr_t addr, uintptr_t ip, int ni
                     *ok = 0;
                     *need_epilog = 1;
                 } else {
-                    MESSAGE(LOG_DUMP, "Native Call to %s\n", GetNativeName(GetNativeFnc(ip), 1));
+                    MESSAGE(LOG_DUMP, "Native Call to %s\n", GetNativeName(native_name, GetNativeFnc(ip), 1));
                     x87_stackcount(dyn, ninst, x1);
                     x87_forget(dyn, ninst, x3, x4, 0);
                     sse_purge07cache(dyn, ninst, x3);
@@ -3310,7 +3311,7 @@ uintptr_t dynarec64_00(dynarec_la64_t* dyn, uintptr_t addr, uintptr_t ip, int ni
                         }
                     }
                     PUSH1(x2);
-                    MESSAGE(LOG_DUMP, "Native Call to %s (retn=%d)\n", GetNativeName(GetNativeFnc(dyn->insts[ninst].natcall - 1), 1), dyn->insts[ninst].retn);
+                    MESSAGE(LOG_DUMP, "Native Call to %s (retn=%d)\n", GetNativeName(native_name, GetNativeFnc(dyn->insts[ninst].natcall - 1), 1), dyn->insts[ninst].retn);
                     // calling a native function
                     sse_purge07cache(dyn, ninst, x3);
                     if ((BOX64ENV(log) < 2 && !BOX64ENV(rolling_log)) && dyn->insts[ninst].natcall) {

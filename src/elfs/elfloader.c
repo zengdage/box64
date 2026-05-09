@@ -1388,7 +1388,7 @@ elfheader_t* FindElfAddress(box64context_t *context, uintptr_t addr)
     return NULL;
 }
 
-const char* FindNearestSymbolName(elfheader_t* h, void* p, uintptr_t* start, uint64_t* sz)
+const char* FindNearestSymbolName(char* native_name, elfheader_t* h, void* p, uintptr_t* start, uint64_t* sz)
 {
     uintptr_t addr = (uintptr_t)p;
 
@@ -1402,7 +1402,7 @@ const char* FindNearestSymbolName(elfheader_t* h, void* p, uintptr_t* start, uin
         if(getProtection((uintptr_t)p)&(PROT_READ)) {
             uintptr_t adj_p = ((uintptr_t)p)&~(sizeof(onebridge_t)-1);
             if (*(uint8_t*)(adj_p) == 0xCC && IsBridgeSignature(*(uint8_t*)(adj_p + 1), *(uint8_t*)(adj_p + 2))) {
-                ret = getBridgeName((void*)adj_p);
+                ret = getBridgeName(native_name, (void*)adj_p);
                 if(ret) {
                     if(start)
                         *start = (uintptr_t)adj_p;
@@ -2129,13 +2129,14 @@ EXPORT void PltResolver64(x64emu_t* emu)
 const char* getAddrFunctionName(uintptr_t addr)
 {
     static char rets[8][1000];
+    char native_name[NATIVE_NAME_MAX] = { 0 };
     static int idx = 0;
     char* ret = rets[idx];
     idx = (idx + 1) & 7;
     uint64_t sz = 0;
     uintptr_t start = 0;
     elfheader_t* elf = FindElfAddress(my_context, addr);
-    const char* symbname = FindNearestSymbolName(elf, (void*)addr, &start, &sz);
+    const char* symbname = FindNearestSymbolName(native_name, elf, (void*)addr, &start, &sz);
     if (!sz) sz = 0x100; // arbitrary value...
     if (symbname && (addr >= start) && (addr < (start + sz))) {
         if (symbname[0] == '\0')

@@ -843,7 +843,7 @@ int GetSymTabStartEnd(lib_t* maplib, const char* name, uintptr_t* start, uintptr
 }
 
 
-const char* FindSymbolName(lib_t *maplib, void* p, void** start, uint64_t* sz, const char** libname, void** base, library_t** lib)
+const char* FindSymbolName(char* native_name, lib_t *maplib, void* p, void** start, uint64_t* sz, const char** libname, void** base, library_t** lib)
 {
     // first, search in self...
     const char* ret = NULL;
@@ -851,7 +851,7 @@ const char* FindSymbolName(lib_t *maplib, void* p, void** start, uint64_t* sz, c
     uint64_t size = 0;
     elfheader_t* h = FindElfAddress(my_context, (uintptr_t)p);
     if(h) {
-        ret = FindNearestSymbolName(h, p, &offs, &size);
+        ret = FindNearestSymbolName(native_name, h, p, &offs, &size);
 
         if(start)
             *start = (void*)offs;

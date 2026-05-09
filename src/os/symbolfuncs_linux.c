@@ -5,9 +5,10 @@
 
 int PrintFunctionAddr(uintptr_t nextaddr, const char* text)
 {
+    char native_name[NATIVE_NAME_MAX] = { 0 };
     uint64_t sz = 0;
     uintptr_t start = 0;
-    const char* symbname = FindNearestSymbolName(FindElfAddress(my_context, nextaddr), (void*)nextaddr, &start, &sz);
+    const char* symbname = FindNearestSymbolName(native_name, FindElfAddress(my_context, nextaddr), (void*)nextaddr, &start, &sz);
     if(!sz) sz=0x100;   // arbitrary value...
     if(symbname && nextaddr>=start && (nextaddr<(start+sz) || !sz)) {
         if(nextaddr==start)

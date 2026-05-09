@@ -24,7 +24,7 @@ void* GetNativeOrAlt(void* fnc, void* alt);
 
 uintptr_t AddVSyscall(bridge_t* bridge, int num);
 
-const char* getBridgeName(void* addr);
+const char* getBridgeName(char* buff, void* addr);
 void* getBridgeFnc2(void* addr);
 
 void init_bridge_helper(void);

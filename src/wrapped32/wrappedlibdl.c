@@ -61,6 +61,7 @@ typedef struct my_dl_info_32_s
 
 int my32_dladdr1(x64emu_t* emu, void *addr, void *i, void** extra_info, int flags)
 {
+    char native_name[NATIVE_NAME_MAX] = { 0 };
     //int dladdr(void *addr, my_dl_info_32_t *info);
     CLEARERR;
     my_dl_info_32_t *info = (my_dl_info_32_t*)i;
@@ -73,11 +74,11 @@ int my32_dladdr1(x64emu_t* emu, void *addr, void *i, void** extra_info, int flag
     void* start = NULL;
     const char* fname = NULL;
     void* base = NULL;
-    const char* sname = FindSymbolName(my_context->maplib, addr, &start, NULL, &fname, &base, &lib);
+    const char* sname = FindSymbolName(native_name, my_context->maplib, addr, &start, NULL, &fname, &base, &lib);
     info->dli_saddr = to_ptrv(start);
     info->dli_fname = to_ptrv((void*)fname);
     info->dli_fbase = to_ptrv(base);
-    info->dli_sname = to_ptrv((void*)sname);
+    info->dli_sname = to_ptrv((void*)sname == native_name ? strdup(sname) : name);
     printf_log(LOG_DEBUG, "     dladdr return saddr=%p, fname=\"%s\", sname=\"%s\"\n", start, sname?sname:"", fname?fname:"");
     if(flags==RTLD_DL_SYMENT) {
         printf_log(LOG_INFO, "Warning, unimplement call to dladdr1 with RTLD_DL_SYMENT flags\n");
@@ -133,10 +134,11 @@ EXPORT int my32__dl_find_object(x64emu_t* emu, void* addr, my_dl_find_object_t* 
 {
     //printf_log(LOG_INFO, "Unimplemented _dl_find_object called\n");
     uintptr_t start=0, sz=0;
+    char native_name[NATIVE_NAME_MAX] = { 0 };
     elfheader_t* h = FindElfAddress(my_context, (uintptr_t)addr);
     if(h) {
         // find an actual elf
-        const char* name = FindNearestSymbolName(h, addr, &start, &sz);
+        const char* name = FindNearestSymbolName(native_name, h, addr, &start, &sz);
         result->dlfo_map_start = start;
         result->dlfo_map_end = start+sz-1;
         result->dlfo_eh_frame = h->ehframehdr+h->delta;

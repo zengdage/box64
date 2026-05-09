@@ -49,6 +49,8 @@ void EmuX86Syscall(void* emu);
 void* GetSeg43Base(void* emu);
 void* GetSegmentBase(void* emu, uint32_t desc);
 
+#define NATIVE_NAME_MAX 512
+
 // These functions only applies to Linux --------------------------
 int IsBridgeSignature(char s, char c);
 int IsNativeCall(uintptr_t addr, int is32bits, uintptr_t* calladdress, uint16_t* retn);
@@ -58,8 +60,8 @@ void* EmuFork(void* emu, int forktype);
 void PersonalityAddrLimit32Bit(void);
 
 int IsAddrElfOrFileMapped(uintptr_t addr);
-const char* GetNativeName(void* p, int lib);
-const char* GetBridgeName(void* p);
+const char* GetNativeName(char* buff, void* p, int lib);
+const char* GetBridgeName(char* buff, void* p);
 // ----------------------------------------------------------------
 
 #ifndef _WIN32

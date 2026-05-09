@@ -83,9 +83,10 @@ void x86Int3(x64emu_t* emu, uintptr_t* addr)
                 uint64_t *pu64 = NULL;
                 uint32_t *pu32 = NULL;
                 uint8_t *pu8 = NULL;
-                const char *s = (bridge->func)?GetNativeName(bridge->name_or_func, 0):bridge->name_or_func;
+                char native_name[NATIVE_NAME_MAX] = { 0 };
+                const char *s = (bridge->func)?GetNativeName(native_name, bridge->name_or_func, 0):bridge->name_or_func;
                 if(!s)
-                    s = GetNativeName((void*)a, 0);
+                    s = GetNativeName(native_name, (void*)a, 0);
                 if(a==(uintptr_t)PltResolver32) {
                     if(BOX64ENV(rolling_log)) {
                         ptr_t addr = *((uint32_t*)from_ptrv(R_ESP));
